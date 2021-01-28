@@ -13,14 +13,16 @@ struct SimonGame
 {
   // Definition of the patterns for each level
   // Patterns are terminated with a zero
-  static constexpr uint8_t num_levels = 6;
+  static constexpr uint8_t num_levels = 8;
   static constexpr uint16_t patterns[num_levels][8] = {
     { 0x0001, 0x0002, 0x0001, 0 },
-    { 0x0020, 0x0080, 0x0100, 0x0400, 0},
-    { 0x1000, 0x2000, 0x0004, 0x0200, 0},
-    { 0x0008, 0x0200, 0x1000, 0x0800, 0x0100, 0},
-    { 0x0002, 0x1000, 0x0400, 0x0040, 0x0001, 0x0002, 0},
-    { 0x1000, 0x0010, 0x2000, 0x8000, 0x0040, 0x0020, 0x8000, 0},
+    { 0x0002, 0x0030, 0x0008, 0 },
+    { 0x0100, 0x00c0, 0x0009, 0 },
+    { 0x0020, 0x0080, 0x0100, 0x0600, 0},
+    { 0x1000, 0x2000, 0x0005, 0x0300, 0},
+    { 0x0008, 0x0200, 0x1000, 0x0800, 0x0610, 0},
+    { 0x0002, 0x1000, 0x0400, 0x0040, 0x0003, 0x0004, 0},
+    { 0x1000, 0x0030, 0x2000, 0x8000, 0x0040, 0x0020, 0x8000, 0},
   };
 
   // If you fail a level this many times, go back to the baginning
@@ -58,7 +60,7 @@ struct SimonGame
     while (timeout) {
       uint16_t button_states = pico_keypad.get_button_states();
       if (last_button_states != button_states && button_states) {
-	last_button_states = button_states;
+        last_button_states = button_states;
 
         if (button_states == *pattern) {
           // Correct button press
@@ -69,6 +71,17 @@ struct SimonGame
             return true;
           }
           timeout = pattern_time_allowed;
+          while (button_states != 0) {
+            // Wait for all buttons to be released
+            timeout--;
+            sleep_ms(20);
+            button_states = pico_keypad.get_button_states();
+          }
+          continue;
+        } else if ((button_states & *pattern) == button_states) {
+          // Some but not all correct buttons pressed
+          // allow a small amount of time to press remaining buttons
+          if (timeout > 5) timeout = 5;
         } else {
           // Incorect press
           return false;
