@@ -101,6 +101,7 @@ struct SimonGame
 
     if (check_pattern()) {
       // Player matched the pattern, flash for success
+      printf("Level %d complete!\n", level);
       sleep_ms(100);
       for (int i = 0; i < 3; ++i) {
         lit = 0xffff;
@@ -115,13 +116,15 @@ struct SimonGame
       // Go to the next level.  Speed up if all levels done.
       level++;
       if (level >= num_levels) {
-	level = 0;
-	pattern_delay = (pattern_delay * 4) / 5;
+        printf("All levels complete!  Going faster...\n");
+        level = 0;
+        pattern_delay = (pattern_delay * 4) / 5;
       }
     }
     else
     {
       // Player failed the level, flash for failure
+      printf("Level %d failed... ", level);
       lit = 0;
       render();
       sleep_ms(100);
@@ -132,17 +135,21 @@ struct SimonGame
       lit = 0;
       render();
       if (++fails == max_fails) {
-	// Too many fails, reset to first level and flash a second time.
-	level = 0;
-	fails = 0;
+        // Too many fails, reset to first level and flash a second time.
+        printf("reset to beginning!\n");
+        level = 0;
+        fails = 0;
 	
         sleep_ms(100);
-	lit = 0xffff;
+        lit = 0xffff;
         render();
         sleep_ms(200);
         lit = 0;
         render();
       }	
+      else {
+        printf("allow another try\n");
+      }
     }
     sleep_ms(pattern_delay);
   }
@@ -174,8 +181,12 @@ struct SimonGame
 SimonGame simon;
 
 int main() {
+  stdio_init_all();
+
   pico_keypad.init();
   pico_keypad.set_brightness(1.0f);
+
+  printf("Starting game\n");
 
   while(true) {
     simon.play();
